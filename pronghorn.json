@@ -12,7 +12,7 @@
     {
       "name": "getRecord",
       "summary": "Get Change Tickets",
-      "description": "Get all ServiceNow change management tickets.",
+      "description": "Get the first ServiceNow change management ticket.",
       "input": [],
       "output": {
         "name": "changeTickets",
