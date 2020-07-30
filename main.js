@@ -119,7 +119,7 @@ function post(serviceNowTable, callback) {
   // Some properties are read from global const options.
   // Some properties are passed into function get() through parameters.
   const requestOptions = {
-    method: 'GET',
+    method: 'POST',
     auth: {
       user: options.username,
       pass: options.password,
