@@ -149,6 +149,47 @@ class ServiceNowAdapter extends EventEmitter {
     this.emit(status, { id: this.id });
   }
 
+/**
+   * Here we document generic change ticket properties.
+   * @typedef {object} ServiceNowAdapter~genericChange - Change Ticket
+   *   properties object
+   * @property {string} change_ticket_number - friendly ticket number
+   * @property {object} active 
+   * @property {string} priority
+   * @property {string} description
+   * @property {string} work_start
+   * @property {string} work_end
+   * @property {string} change_ticket_key - internal ticket identifier
+   */
+
+  /**
+   * @memberof ServiceNowAdapter
+   * @method TransformChangeRecord
+   * @summary Transform ServiceNow Record into generic change ticket model
+   * @description Mutates an array of objects to match generic model for change tickets
+   * 
+   * @param {Object} changeTicket - ServiceNow Change Ticket document to be transformed
+   */
+  TransformChangeRecord(ServiceNowChange) {
+  
+    let genericChange = new Object
+    let property_map = { 
+      'number': 'change_ticket_number',
+      'active': 'active',
+      'priority': 'priority',
+      'description': 'description',
+      'work_start': 'work_start',
+      'work_end': 'work_end',
+      'sys_id' : 'change_ticket_key'
+    }
+    for (const p of Object.keys(ServiceNowChange)) {
+      if (p in property_map) {
+        genericChange[property_map[p]] = ServiceNowChange[p];
+      }
+    }
+    return genericChange
+  }
+
   /**
    * @memberof ServiceNowAdapter
    * @method getRecord
@@ -160,7 +201,15 @@ class ServiceNowAdapter extends EventEmitter {
    */
   getRecord(callback) {
     
-    this.connector.get(callback);
+    this.connector.get((data, error) => {
+      if ((typeof data == 'Object') && ('body' in data)) {
+        log.trace(`ServiceNow: ${this.id} POST response: ${data.body}`)
+        genericChange = TransformChangeRecord(JSON.parse(data.body))
+        data.body = JSON.stringify(genericChange)
+        log.spam(`ServiceNow: ${this.id} transformed response: ${data.body}`)
+      }
+      callback(data, error)
+    });
   }
 
   /**
@@ -174,8 +223,17 @@ class ServiceNowAdapter extends EventEmitter {
    */
   postRecord(callback) {
 
-    this.connector.post(callback);
+    this.connector.post((data, error) => {
+      if ((typeof data == 'Object') && ('body' in data)) {
+        log.trace(`ServiceNow: ${this.id} POST response: ${data.body}`)
+        genericChange = TransformChangeRecord(JSON.parse(data.body))
+        data.body = JSON.stringify(genericChange)
+        log.spam(`ServiceNow: ${this.id} transformed response: ${data.body}`)
+      }
+      callback(data, error)
+    });
   }
+
 }
 
 module.exports = ServiceNowAdapter;
