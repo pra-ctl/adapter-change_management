@@ -185,6 +185,8 @@ class ServiceNowAdapter extends EventEmitter {
     for (const p of Object.keys(ServiceNowChange)) {
       if (p in property_map) {
         genericChange[property_map[p]] = ServiceNowChange[p];
+      } else {
+        log.debug(`ServiceNow: ${this.id} dropping "${p}" from response object during transformation to genericChange.  Value was: ${ServiceNowChange[p]}.`)
       }
     }
     return genericChange
@@ -202,13 +204,19 @@ class ServiceNowAdapter extends EventEmitter {
   getRecord(callback) {
     
     this.connector.get((data, error) => {
-      if ((typeof data == 'Object') && ('body' in data)) {
-        log.trace(`ServiceNow: ${this.id} POST response: ${data.body}`)
-        genericChange = TransformChangeRecord(JSON.parse(data.body))
-        data.body = JSON.stringify(genericChange)
-        log.spam(`ServiceNow: ${this.id} transformed response: ${data.body}`)
+      let genericChanges = []
+      let response = null
+      log.trace(`ServiceNow: ${this.id} response data type: ${typeof data}`);
+      if ( (typeof data == 'object') && ('body' in data)) {
+        log.spam(`ServiceNow: ${this.id} POST response: ${data.body}`)
+        genericChanges = JSON.parse(data.body).result.map(x => this.TransformChangeRecord(x))
+        log.debug(`ServiceNow: ${this.id} constructed array of genericChanges: ${genericChanges}`)
+        response = genericChanges
+      } else {
+        log.debug(`ServiceNow: ${this.id} not transforming response: ${JSON.stringify(data)}`);
+        response = data
       }
-      callback(data, error)
+      callback(response, error)
     });
   }
 
@@ -224,13 +232,19 @@ class ServiceNowAdapter extends EventEmitter {
   postRecord(callback) {
 
     this.connector.post((data, error) => {
-      if ((typeof data == 'Object') && ('body' in data)) {
-        log.trace(`ServiceNow: ${this.id} POST response: ${data.body}`)
-        genericChange = TransformChangeRecord(JSON.parse(data.body))
-        data.body = JSON.stringify(genericChange)
-        log.spam(`ServiceNow: ${this.id} transformed response: ${data.body}`)
+      let genericChange = null
+      let response = null
+      log.trace(`ServiceNow: ${this.id} response data type: ${typeof data}`);
+      if ( (typeof data == 'object') && ('body' in data)) {
+        log.spam(`ServiceNow: ${this.id} POST response: ${data.body}`)
+        let genericChange = this.TransformChangeRecord(JSON.parse(data.body).result)
+        log.debug(`ServiceNow: ${this.id} construcetd generic change record: ${genericChange}`)
+        response = genericChange
+      } else {
+        log.debug(`ServiceNow: ${this.id} not transforming response: ${JSON.stringify(data)}`);
+        response = data
       }
-      callback(data, error)
+      callback(response, error)
     });
   }
 

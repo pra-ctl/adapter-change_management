@@ -35,12 +35,12 @@
     },
     {
       "name": "postRecord",
-      "summary": "Crete Change Ticket",
+      "summary": "Create Change Ticket",
       "description": "Create a ServiceNow change management ticket.",
       "input": [],
       "output": {
-        "name": "postRecord",
-        "summary": "Create Change Ticket",
+        "name": "changeTicket",
+        "summary": "Created Change Ticket",
         "description": "Create ServiceNow change management ticket.",
         "input": [],
         "output": {
